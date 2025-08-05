@@ -1,8 +1,6 @@
 using TaskManagerApi.Models;
 using TaskManagerApi.Services;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
-
 namespace TaskManagerApi.Controllers;
 
 [ApiController]
@@ -15,10 +13,9 @@ public class TaskManagerController : ControllerBase
         tasksService = _tasksService;
 
     [HttpGet]
-    public async Task<List<TodoTask>> Get()
+    public async Task<List<DbTask>> Get()
     {
-        var dbTasks = await tasksService.GetAsync();
-        return dbTasks.Select(t => TodoTask.fromDbTask(t)).ToList();
+        return await tasksService.GetAsync();
     }
 
     [HttpGet("{id:length(24)}")]

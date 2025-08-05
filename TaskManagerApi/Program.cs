@@ -1,4 +1,3 @@
-using TaskManagerApi;
 using TaskManagerApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +9,7 @@ builder.Services.AddSwaggerGen();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<TasksService>();
+builder.Configuration.AddEnvironmentVariables(prefix: "Env_");
 
 var app = builder.Build();
 
@@ -28,3 +28,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
+//expose for test purposes

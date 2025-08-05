@@ -1,47 +1,58 @@
 namespace TaskManagerApi.Models;
 
+using System.Text.Json.Serialization;
 using Models.Scheduling;
+using TaskManagerApi.Models.Converters;
 using TaskManagerApi.Support.Exceptions;
 
 public class TodoTask
 {
-    public string? id { get; init; }
+    public string? id { get; set; }
     public required int userId { get; init; }
     public required string title { get; set; }
     public string? details { get; set; }
-    public Schedule SchedulingDetails { get; private set; } = new Unscheduled();
-    void ConvertSchedulingDetails(DbTask task)
+    [JsonConverter(typeof(ScheduleConverter))]
+    public Schedule? schedulingDetails { get; private set; }
+    public static Schedule ConvertSchedulingDetails(DbTask task)
     {
         if (!task.scheduled)
         {
-            this.SchedulingDetails = new Unscheduled();
-            return;
+            return new Unscheduled();
         }
         if (task.dueDate is not null)
         {
             if ((task.repeatPattern ?? RepeatPattern.None) is not RepeatPattern.None)
             {
-                this.SchedulingDetails = new Repeating();
+                return new Repeating()
+                {
+                    repeatPattern = task.repeatPattern!.Value,
+                    nextDueDate = task.dueDate!.Value
+                };
             }
             else
             {
-                this.SchedulingDetails = new OneOff();
+                return new OneOff()
+                {
+                    dueDate = task.dueDate!.Value
+                };
             }
-            return;
         }
         throw new TaskFormatInvalidException(task);
     }
-    public static TodoTask fromDbTask(DbTask dbTask)
+    public static TodoTask FromDbTask(DbTask dbTask)
     {
-        var task = new TodoTask()
+        return new TodoTask()
         {
             id = dbTask.id,
             userId = dbTask.userId,
             title = dbTask.title,
-            details = dbTask.details
+            details = dbTask.details,
+            schedulingDetails = ConvertSchedulingDetails(dbTask)
         };
+    }
 
-        task.ConvertSchedulingDetails(dbTask);
-        return task;
+    public void SetDueDate(DateTime date)
+    {
+        this.schedulingDetails!.SetDueDate(date);
     }
 }
